@@ -1031,6 +1031,11 @@
       .benefit-icon { font-size:25px; width:25px; flex-basis:25px; }
     }
 
+    .image-lightbox{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+    .image-lightbox.open{display:flex}
+    .image-lightbox img{max-width:min(1100px,94vw);max-height:88vh;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.55)}
+    .image-lightbox-close{position:absolute;top:18px;right:24px;width:46px;height:46px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(20,20,20,.8);color:#fff;font-size:30px;line-height:1;cursor:pointer}
+    .property-image,.detail-gallery img{cursor:zoom-in}
     .detail-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0 8px}
     .detail-gallery figure{margin:0;overflow:hidden;border-radius:13px;background:#171717;border:1px solid rgba(212,175,55,.18)}
     .detail-gallery img{display:block;width:100%;height:150px;object-fit:cover;cursor:zoom-in}
@@ -1173,6 +1178,11 @@
         <a class="btn btn-primary" id="detailWhatsapp" href="#" target="_blank" rel="noopener">Quero mais informações pelo WhatsApp</a>
       </div>
     </div>
+  </div>
+
+  <div class="image-lightbox" id="imageLightbox" role="dialog" aria-modal="true" aria-label="Imagem ampliada">
+    <button class="image-lightbox-close" id="closeImageLightbox" type="button" aria-label="Fechar imagem">×</button>
+    <img id="lightboxImage" src="" alt="Imagem ampliada do empreendimento">
   </div>
 
   <script>
@@ -1870,7 +1880,42 @@
     const clearSearch = document.getElementById("clearSearch");
     const emptyState = document.getElementById("emptyState");
     const modal = document.getElementById("detailModal");
+    const imageLightbox = document.getElementById("imageLightbox");
+    const lightboxImage = document.getElementById("lightboxImage");
+    const closeImageLightboxButton = document.getElementById("closeImageLightbox");
     let activeFilter = "todos";
+
+    function openImageLightbox(src, alt) {
+      if (!src) return;
+      lightboxImage.src = src;
+      lightboxImage.alt = alt || "Imagem ampliada do empreendimento";
+      imageLightbox.classList.add("open");
+      document.body.classList.add("no-scroll");
+      closeImageLightboxButton.focus();
+    }
+
+    function closeImageLightbox() {
+      imageLightbox.classList.remove("open");
+      lightboxImage.src = "";
+      document.body.classList.remove("no-scroll");
+    }
+
+    document.addEventListener("click", event => {
+      const image = event.target.closest(".property-image, .detail-gallery img");
+      if (image) {
+        event.preventDefault();
+        event.stopPropagation();
+        openImageLightbox(image.currentSrc || image.src, image.alt);
+      }
+    });
+
+    closeImageLightboxButton.addEventListener("click", closeImageLightbox);
+    imageLightbox.addEventListener("click", event => {
+      if (event.target === imageLightbox) closeImageLightbox();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && imageLightbox.classList.contains("open")) closeImageLightbox();
+    });
 
     function whatsappUrl(message) {
       const number = CONFIG.whatsapp.replace(/\D/g, "");
